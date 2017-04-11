@@ -3,7 +3,7 @@
     "description": "wrapper for vidal database online service",
     "type": "library",
     "license": "MIT",
-    "require": {},
+    "require": {"guzzlehttp/guzzle": "^6.0"},
     "authors": [
         {
             "name": "Vidal Service",
