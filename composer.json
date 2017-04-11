@@ -3,7 +3,6 @@
     "description": "wrapper for vidal database online service",
     "type": "laravel package",
     "license": "MIT",
-    "minimum-stability": "dev",
     "require": {},
     "authors": [
         {
@@ -17,6 +16,5 @@
         }
     },
     "minimum-stability": "stable",
-    "require": {},
     "version": "1.0"
 }
