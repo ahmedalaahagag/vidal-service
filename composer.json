@@ -1,0 +1,22 @@
+{
+    "name": "hagag/vidal-service",
+    "description": "wrapper for vidal database online service",
+    "type": "laravel package",
+    "license": "MIT",
+    "minimum-stability": "dev",
+    "require": {},
+    "authors": [
+        {
+            "name": "Vidal Service",
+            "email": "ahmedalaahagag@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "VidalService\\": "src/"
+        }
+    },
+    "minimum-stability": "stable",
+    "require": {},
+    "version": "1.0"
+}
