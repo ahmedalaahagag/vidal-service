@@ -1,7 +1,7 @@
 {
     "name": "hagag/vidal-service",
     "description": "wrapper for vidal database online service",
-    "type": "laravel package",
+    "type": "library",
     "license": "MIT",
     "require": {},
     "authors": [
