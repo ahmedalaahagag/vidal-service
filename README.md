@@ -1,1 +1,1 @@
-# vidal-service
+wrapper for vidal database online service
