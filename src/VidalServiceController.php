@@ -11,6 +11,7 @@ class VidalServiceController extends Controller
     private $appKey;
     private $guzzleClient;
     private $baseUrl = 'http://api-sa.vidal.fr/rest/api/';
+
     public function register()
     {
         include __DIR__.'/routes.php';
@@ -31,7 +32,7 @@ class VidalServiceController extends Controller
 
     /**
      * @description :  Using green rain code to get vidal medication ID
-     * @param : string : green rain code
+     * @param string $greenRainCode green rain code
      * @return : Medication info array
      */
     public function getMedicationByGreenRainCode($greenRainCode=null){
@@ -57,6 +58,154 @@ class VidalServiceController extends Controller
         }else{
             return $response->getBody();
         }
+        }catch (\Exception $e){
+            return $e->getMessage();
+        }
+    }
+    /**
+     * @description :  get vidal medication info by id
+     * @param : string : id
+     * @return : Medication info array
+     */
+    public function getPatientAlerts($patient=null,$pathologies=null,$allergies=null,$medications=null){
+        try{
+            if($patient==null || $pathologies==null || $allergies==null || $medications==null){
+                throw new Exception('Parameters Missing (patient profile,pathologies,allergies,$medications)');
+            }
+            $operation = 'alerts?';
+            $patient['dateOfBirth'] = date('Y-m-dTH:i:s.uZ',$patient['date_of_birth']);
+            $xmlRequest = new \SimpleXMLElement('<?xml version="1.0" encoding="utf-8"?><prescription>');
+            $xmlRequest = $xmlRequest->addAttribute('patient');
+            $xmlRequest->addChild('dateOfBirth',$patient['dateOfBirth'] );
+            $xmlRequest->addChild('gender', $patient['gender']);
+            $xmlRequest->addChild('weight', $patient['weight']);
+            $xmlRequest->addChild('height', $patient['height']);
+            $xmlRequest->addChild('breastFeeding', $patient['breastFeeding']);
+            $xmlRequest->addChild('creatin', $patient['creatin']);
+            $xmlRequest->addChild('hepaticInsufficiency', $patient['hepaticInsufficiency']);
+            $xmlRequest->addChild('allergies');
+            foreach ($allergies as $allergy){
+                $xmlRequest->addChild('allergy','vidal://allergy/'.$allergy);
+            }
+            $xmlRequest->addChild('molecules');
+            $xmlRequest->addChild('pathologies');
+            foreach ($pathologies as $pathology){
+                $xmlRequest->addChild('pathology','vidal://cim10/'.$pathology);
+            }
+            $xmlRequest->addAttribute('prescription-lines');
+            foreach ($medications as $medication){
+                $xmlRequest->addAttribute('prescription-line');
+                $medication = $this->getMedicationById($medication);
+                $xmlRequest->addChild('drugId',$medication['drugid'] );
+                $xmlRequest->addChild('drugType',$medication['drugtype'] );
+                $xmlRequest->addChild('dose',$medication['dose']);
+                $xmlRequest->addChild('unitId',$medication['galenicform']['VIDALID']);
+                $xmlRequest->addChild('duration',$medication['duration']);
+                $xmlRequest->addChild('durationType',$medication['durationtype']);
+                $xmlRequest->addChild('frequencyType',$medication['frequencytype']);
+            }
+            $response = $this->guzzleClient->post($this->baseUrl.$operation.'?app_id='.$this->appId.'&app_key='.$this->appKey,
+                [
+                    'body' => $xmlRequest,
+                    'Content-Type'=>'text/xml'
+                ]);
+            return ($response);
+        }catch (\Exception $e){
+                return $e->getMessage();
+            }
+        }
+    /**
+     * @description :  get vidal medication info by id
+     * @param : string : id
+     * @return : Medication info array
+     */
+    public function getMedicationById($id=null){
+        try{
+            if($id==null){
+                throw new Exception('id Missing');
+            }
+            $operation = 'package/';
+            $medication =  array();
+            $response = $this->guzzleClient->get($this->baseUrl.$operation.$id.'?app_id='.$this->appId.'&app_key='.$this->appKey);
+            if($response->getStatusCode() == 200){
+                $medicationResponseTags = $this->XMLtoArray($response->getBody()->getContents());
+                foreach ($medicationResponseTags as $medicationResponseTag){
+                    $keys = array_keys($medicationResponseTag['ENTRY']);
+                    foreach ($keys as $key){
+                        if(strpos($key,'VIDAL')!==false){
+                            $newKey = strtolower(str_replace("VIDAL:","",$key));
+                            $medication[$newKey]=$medicationResponseTag['ENTRY'][$key];
+                        }
+                    }
+                }
+                dd($medication);
+            }else{
+                return $response->getBody();
+            }
+        }catch (\Exception $e){
+            return $e->getMessage();
+        }
+    }
+    /**
+     * @description :  get vidal medication info by ICD10Code
+     * @param : string : id
+     * @return : Medication info array
+     */
+    public function getMedicationByICD10Code($icd10Code=null){
+        try{
+            if($icd10Code==null){
+                throw new Exception('icd10Code Missing');
+            }
+            $operation = 'pathologies?';
+            $medication =  array();
+            $response = $this->guzzleClient->get($this->baseUrl.$operation.'filter=CIM10&code='.$icd10Code);
+            if($response->getStatusCode() == 200){
+                $medicationResponseTags = $this->XMLtoArray($response->getBody()->getContents());
+                foreach ($medicationResponseTags as $medicationResponseTag){
+                    $keys = array_keys($medicationResponseTag['ENTRY']);
+                    foreach ($keys as $key){
+                        if(strpos($key,'VIDAL')!==false){
+                            $newKey = strtolower(str_replace("VIDAL:","",$key));
+                            $medication[$newKey]=$medicationResponseTag['ENTRY'][$key];
+                        }
+                    }
+                }
+                return $medication;
+            }else{
+                return $response->getBody();
+            }
+        }catch (\Exception $e){
+            return $e->getMessage();
+        }
+    }
+    /**
+     * @description :  Using allergy class code to get vidal allergy
+     * @param : string : allergy class
+     * @return : Allergy info array
+     */
+    public function getAllergyByClass($allergyClass=null){
+        try{
+            if($allergyClass==null){
+                throw new Exception('Allergy Class Missing');
+            }
+            $operation = 'allergies?';
+            $allergy =  array();
+            $response = $this->guzzleClient->get($this->baseUrl.$operation.'q='.$allergyClass.'&app_id='.$this->appId.'&app_key='.$this->appKey);
+            if($response->getStatusCode() == 200){
+                $allergyResponseTags = $this->XMLtoArray($response->getBody()->getContents());
+                foreach ($allergyResponseTags as $allergyResponseTag){
+                    $keys = array_keys($allergyResponseTag['ENTRY']);
+                    foreach ($keys as $key){
+                        if(strpos($key,'VIDAL')!==false){
+                            $newKey = strtolower(str_replace("VIDAL:","",$key));
+                            $allergy[$newKey]=$allergyResponseTag['ENTRY'][$key];
+                        }
+                    }
+                }
+                return $allergy;
+            }else{
+                return $response->getBody();
+            }
         }catch (\Exception $e){
             return $e->getMessage();
         }
