@@ -3,7 +3,8 @@
     "description": "wrapper for vidal database online service",
     "type": "library",
     "license": "MIT",
-    "require": {"guzzlehttp/guzzle": "^6.0"},
+    "require": {"guzzlehttp/guzzle": "^6.0",
+        "phpunit/phpunit": "^6.1"},
     "authors": [
         {
             "name": "Vidal Service",
