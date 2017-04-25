@@ -1,5 +1,5 @@
 <?php
-namespace Utilities;
+namespace Hagag\VidalService\Utilities;
 
 class XmlHandler implements XmlHandlerInterface {
 
@@ -90,6 +90,54 @@ class XmlHandler implements XmlHandlerInterface {
 		return $xml_array;
 	}
 
+	function createPrescriptionXml($patient = [],$allergyClassesIds = [],$allergyIngredientsIds = [], $pathologiesIds = [],$medicationsIds = []){
+        $xmlRequest = new \SimpleXMLElement('<prescription></prescription>');
+        $patientXml = $xmlRequest->addChild('patient');
+        $patientXml->addChild('dateOfBirth', $patient['dateOfBirth']);
+        if(key_exists('gender',$patient)){
+            $patientXml->addChild('gender', $patient['gender']==nullOrEmptyString()? null: $patient['gender']);
+        }
+        if(key_exists('weight',$patient)) {
+            $patientXml->addChild('weight', key_exists('weight', $patient) && $patient['weight'] == nullOrEmptyString() ? 0 : $patient['weight']);
+        }
+        if(key_exists('height',$patient)) {
+            $patientXml->addChild('height', key_exists('height', $patient) && $patient['height'] == nullOrEmptyString() ? 0 : $patient['height']);
+        }
+        if(key_exists('breastFeeding',$patient)) {
+            $patientXml->addChild('breastFeeding', key_exists('breastFeeding', $patient) && $patient['breastFeeding'] == nullOrEmptyString() ? 'NONE' : $patient['breastFeeding']);
+        }
+        if(key_exists('breastFeeding',$patient)) {
+            $patientXml->addChild('breastFeeding', key_exists('creatin', $patient) && $patient['creatin'] == nullOrEmptyString() ? '120' : $patient['creatin']);
+        }
+        if(key_exists('hepaticInsufficiency',$patient)) {
+            $patientXml->addChild('hepaticInsufficiency', key_exists('hepaticInsufficiency', $patient) && $patient['hepaticInsufficiency'] == nullOrEmptyString() ? 'NONE' : $patient['hepaticInsufficiency']);
+        }
+        $allergiesXml = $xmlRequest->addChild('allergies');
+        if($allergyClassesIds != null && !empty($allergyClassesIds)){
+            foreach ($allergyClassesIds as $allergyClassesId) {
+                $allergiesXml->addChild('allergy', 'vidal://allergy/'.$allergyClassesId);
+            }
+        }
+        $moleculesXml = $xmlRequest->addChild('molecules');
+        if($allergyIngredientsIds!=null && !empty($allergyIngredientsIds)){
+            foreach ($allergyIngredientsIds as $allergyIngredientsId) {
+                $moleculesXml->addChild('molecule', 'vidal://molecule/'.$allergyIngredientsId);
+            }
+        }
+        $pathologiesXml = $xmlRequest->addChild('pathologies');
+        if($pathologiesIds!=null && !empty($pathologiesIds)) {
+            foreach ($pathologiesIds as $pathologiesId) {
+                $pathologiesXml->addChild('pathology', 'vidal://cim10/' . $pathologiesId);
+            }
+        }
+        $prescriptionLinesXml = $xmlRequest->addChild('prescription-lines');
+        foreach ($medicationsIds as $medicationsId) {
+            $prescriptionLineXml = $prescriptionLinesXml->addChild('prescription-line');
+            $prescriptionLineXml->addChild('drugId',$medicationsId);
+            $prescriptionLineXml->addChild('drugType', 'COMMON_NAME_GROUP');
+        }
+        return $xmlRequest->asXML();
+    }
 }
 
 ?>

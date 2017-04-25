@@ -1,6 +1,6 @@
 <?php
 
-namespace Utilities;
+namespace Hagag\VidalService\Utilities;
 
 interface XmlHandlerInterface {
 
