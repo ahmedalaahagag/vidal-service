@@ -90,7 +90,7 @@ class XmlHandler implements XmlHandlerInterface {
 		return $xml_array;
 	}
 
-	function createPrescriptionXml($patient = [],$allergyClassesIds = [],$allergyIngredientsIds = [], $pathologiesIds = [],$medicationsIds = []){
+	function createPrescriptionXml($patient = [],$allergyClassesIds = [],$allergyIngredientsIds = [], $pathologiesIds = [],$medications = []){
         $xmlRequest = new \SimpleXMLElement('<prescription></prescription>');
         $patientXml = $xmlRequest->addChild('patient');
         $patientXml->addChild('dateOfBirth', $patient['dateOfBirth']);
@@ -131,10 +131,25 @@ class XmlHandler implements XmlHandlerInterface {
             }
         }
         $prescriptionLinesXml = $xmlRequest->addChild('prescription-lines');
-        foreach ($medicationsIds as $medicationsId) {
+        foreach ($medications as $medication) {
             $prescriptionLineXml = $prescriptionLinesXml->addChild('prescription-line');
-            $prescriptionLineXml->addChild('drugId',$medicationsId);
+            $prescriptionLineXml->addChild('drugId', $medication['id']);
             $prescriptionLineXml->addChild('drugType', 'COMMON_NAME_GROUP');
+            if(key_exists('dose',$medication)) {
+                $prescriptionLineXml->addChild('dose', $medication['dose']);
+            }
+            if(key_exists('unitId',$medication)) {
+                $prescriptionLineXml->addChild('unitId', $medication['unitId']);
+            }
+            if(key_exists('duration',$medication)) {
+                $prescriptionLineXml->addChild('duration', $medication['duration']);
+            }
+            if(key_exists('durationtype',$medication)) {
+                $prescriptionLineXml->addChild('durationType', $medication['durationtype']);
+            }
+            if(key_exists('frequencytype',$medication)) {
+                $prescriptionLineXml->addChild('frequencyType', $medication['frequencytype']);
+            }
         }
         return $xmlRequest->asXML();
     }
