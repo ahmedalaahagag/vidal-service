@@ -95,7 +95,7 @@ class XmlHandler implements XmlHandlerInterface {
         $patientXml = $xmlRequest->addChild('patient');
         $patientXml->addChild('dateOfBirth', $patient['dateOfBirth']);
         if(key_exists('gender',$patient)){
-            $patientXml->addChild('gender', $patient['gender']==nullOrEmptyString()? null: $patient['gender']);
+            $patientXml->addChild('gender', $patient['gender']==nullOrEmptyString()? null: strtoupper($patient['gender']));
         }
         if(key_exists('weight',$patient)) {
             $patientXml->addChild('weight', key_exists('weight', $patient) && $patient['weight'] == nullOrEmptyString() ? 0 : $patient['weight']);
@@ -133,7 +133,7 @@ class XmlHandler implements XmlHandlerInterface {
         $prescriptionLinesXml = $xmlRequest->addChild('prescription-lines');
         foreach ($medications as $medication) {
             $prescriptionLineXml = $prescriptionLinesXml->addChild('prescription-line');
-            $prescriptionLineXml->addChild('drugId', $medication['id']);
+            $prescriptionLineXml->addChild('drugId', $medication['vmp']['VIDALID']);
             $prescriptionLineXml->addChild('drugType', 'COMMON_NAME_GROUP');
             if(key_exists('dose',$medication)) {
                 $prescriptionLineXml->addChild('dose', $medication['dose']);

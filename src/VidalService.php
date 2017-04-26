@@ -1,7 +1,6 @@
 <?php
 namespace Hagag\VidalService;
 
-use Dompdf\Exception;
 use GuzzleHttp;
 use \Hagag\VidalService\Utilities\XmlHandler as XmlHandler;
 
@@ -93,7 +92,7 @@ class VidalService {
 	/**
 	 * @description :  get vidal medication info by id
 	 * @param : array : patient['date_of_birth'] required ,
-     * patient['gender'] optional - Possible values:'MALE', 'FEMALE', 'UNKNOWN',
+     * patient['gender'] optional - Possible vaكدlues:'MALE', 'FEMALE', 'UNKNOWN',
      * patient['weight'] optional default is 0,
      * patient['height'] optional default is 0,
      * patient['breastFeeding'] optional - Possible values:'NONE', 'LESS_THAN_ONE_MONTH', 'MORE_THAN_ONE_MONTH', 'ALL',
@@ -102,7 +101,7 @@ class VidalService {
      * @param :array : allergyClasses : names of Allergy classes by class
      * @param :array : allergyIngredients : names of Allergy classes by Ingredients
      * @param :array : pathologies : ICD10 Codes for pathologies
-     * @param :array : medications : List of medications  names
+     * @param :array : medications :
      * @return : Medication info array
 	 */
 	public function getPatientAlerts($patient = [],$allergyClasses = [],$allergyIngredients = [], $pathologies = [],$medications = []) {
@@ -116,7 +115,7 @@ class VidalService {
             $allergyClassesIds=[];
             $allergyIngredientsIds=[];
             $pathologiesIds=[];
-            $medicationsIds=[];
+            $prescriptionMedication=[];
             foreach ($allergyClasses as $allergyClass){
                 $allergyClass = $this->getAllergyByClassOrIngredients($allergyClass);
                 $allergyClassesIds[]=$allergyClass['id'];
@@ -130,15 +129,15 @@ class VidalService {
                 $pathologiesIds[]=$pathology['id'];
             }
             foreach ($medications as $medication){
-                $medication = $this->getMedicationByGreenRainCode($medication);
-                $medicationsIds[]=$medication['id'];
+                $medicationInfo = $this->getMedicationByGreenRainCode($medication);
+                $prescriptionMedication[] = $medicationInfo;
             }
-            $xmlRequest = $this->xmlHandler->createPrescriptionXml($patient,$allergyClassesIds,$allergyIngredientsIds,$pathologiesIds,$medicationsIds);
+            $xmlPrescription = $this->xmlHandler->createPrescriptionXml($patient,$allergyClassesIds,$allergyIngredientsIds,$pathologiesIds,$prescriptionMedication);
             $response = $this->guzzleClient->post(
                 $this->baseUrl . $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey,
                 [
                  'headers'  => ['Content-Type' => 'text/xml'],
-                 'body' => $xmlRequest
+                 'body' => $xmlPrescription
                 ]
             );
             if ($response->getStatusCode() == 200) {
@@ -147,7 +146,7 @@ class VidalService {
                 throw new \Exception('Unknown Error Occurred');
             }
 		} catch (\Exception $e) {
-			return ($e);
+			return $e;
 		}
 	}
     /**
@@ -156,13 +155,20 @@ class VidalService {
      * @return : alert info array
      */
 	private function formatAlertResponse($alert){
-	    $formattedAlert = array();
-        $formattedAlert['alert'] = $alert['FEED']['ENTRY'][0]['VIDAL:TYPE'];
-        $formattedAlert['alertType'] = $alert['FEED']['ENTRY'][1]['VIDAL:ALERTTYPE']['content'];
-        $formattedAlert['alertSeverity'] = $alert['FEED']['ENTRY'][1]['VIDAL:SEVERITY'];
-        $formattedAlert['alertContent'] = $alert['FEED']['ENTRY'][1]['CONTENT']['content'];
-        $formattedAlert['alertTitle'] = $alert['FEED']['ENTRY'][0]['TITLE'];
-        return $formattedAlert;
+        $alerts = $alert['FEED']['ENTRY'];
+        unset($alerts[0]);
+        unset($alerts[count($alerts)]);
+        $formattedAlerts = [];
+        foreach ($alerts as $alert){
+            $formattedAlert['alert'] = $alert['VIDAL:TYPE'];
+            $formattedAlert['alertType'] = $alert['VIDAL:ALERTTYPE']['content'];
+            $formattedAlert['alertSeverity'] = $alert['VIDAL:SEVERITY'];
+            $formattedAlert['alertContent'] = $alert['CONTENT']['content'];
+            $formattedAlert['alertTitle'] = $alert['TITLE'];
+            $formattedAlert['alertCategory'] = $alert['VIDAL:CATEGORIES'];
+            $formattedAlerts[]=$formattedAlert;
+        }
+        return $formattedAlerts;
     }
 	/**
 	 * @description :  get vidal medication info by id
@@ -188,6 +194,7 @@ class VidalService {
 						}
 					}
 				}
+				return $medication;
 			} else {
 				return $response->getBody();
 			}
