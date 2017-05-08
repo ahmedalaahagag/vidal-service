@@ -90,9 +90,9 @@ class VidalService {
         }
     }
 	/**
-	 * @description :  get vidal medication info by id
+	 * @description :  get vidal alerts by ingredients names
 	 * @param : array : patient['date_of_birth'] required ,
-     * patient['gender'] optional - Possible vaكدlues:'MALE', 'FEMALE', 'UNKNOWN',
+     * patient['gender'] optional - Possible values:'MALE', 'FEMALE', 'UNKNOWN',
      * patient['weight'] optional default is 0,
      * patient['height'] optional default is 0,
      * patient['breastFeeding'] optional - Possible values:'NONE', 'LESS_THAN_ONE_MONTH', 'MORE_THAN_ONE_MONTH', 'ALL',
@@ -101,8 +101,8 @@ class VidalService {
      * @param :array : allergyClasses : names of Allergy classes by class
      * @param :array : allergyIngredients : names of Allergy classes by Ingredients
      * @param :array : pathologies : ICD10 Codes for pathologies
-     * @param :array : medications :
-     * @return : Medication info array
+     * @param :array : medications : Greed Rain Codes of Vidal
+     * @return : Alerts Array
 	 */
 	public function getPatientAlerts($patient = [],$allergyClasses = [],$allergyIngredients = [], $pathologies = [],$medications = []) {
 		try {
@@ -149,6 +149,50 @@ class VidalService {
 			return $e;
 		}
 	}
+
+	/**
+     * @description :  get vidal alerts by ingredients ids
+     * @param : array : patient['date_of_birth'] required ,
+     * patient['gender'] optional - Possible values:'MALE', 'FEMALE', 'UNKNOWN',
+     * patient['weight'] optional default is 0,
+     * patient['height'] optional default is 0,
+     * patient['breastFeeding'] optional - Possible values:'NONE', 'LESS_THAN_ONE_MONTH', 'MORE_THAN_ONE_MONTH', 'ALL',
+     * patient['creatin'] optional - Normal creatinine clearance is 120 ,
+     * patient['hepaticInsufficiency'] optional - Possible values:'NONE', 'MODERATE', 'SEVERE',
+     * @param :array : $allergyIds : IDs of allergis ids in vidal
+     * @param :array : $pathologiesIds : IDs of pathologies ids in vidal
+     * @param :array : medications : medication of array info [id-dose-unitId-duration-durationtype-frequencytype]
+     * durationtype : Possible values:'MINUTE', 'HOUR', 'DAY', 'WEEK', 'MONTH', 'YEAR'
+     * frequencytype : Possible values: 'THIS_DAY', 'PER_DAY', 'PER_24_HOURS', 'PER_WEEK', 'PER_MONTH','PER_YEAR', 'PER_2_DAYS', 'PER_HOUR', 'PER_MINUTE'
+     * @return : Alerts Array
+     */
+
+    public function getPatientAlertsByIds($patient = [],$allergyIds= [],$pathologiesIds = [],$medications = []) {
+        try {
+            if (empty($patient) && !key_exists('date_of_birth',$patient) || empty($medications)) {
+                throw new \Exception('Parameters Missing (patient profile at least date_of_birth Or medications)');
+            }
+            $operation = 'alerts?';
+            $patient['dateOfBirth'] = new \DateTime($patient['date_of_birth']);
+            $patient['dateOfBirth'] = $patient['dateOfBirth']->format('Y-m-dTH:i:s.uZ');
+            $xmlPrescription = $this->xmlHandler->createPrescriptionXml($patient,$allergyIds,[],$pathologiesIds,$medications);
+            $response = $this->guzzleClient->post(
+                $this->baseUrl . $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey,
+                [
+                    'headers'  => ['Content-Type' => 'text/xml'],
+                    'body' => $xmlPrescription
+                ]
+            );
+            if ($response->getStatusCode() == 200) {
+                return ($this->formatAlertResponse($this->xmlHandler->toArray($response->getBody()->getContents())));
+            }else{
+                throw new \Exception('Unknown Error Occurred');
+            }
+        } catch (\Exception $e) {
+            return $e;
+        }
+    }
+
     /**
      * @description :  format alert response
      * @param : array : alert array response of vidal API
