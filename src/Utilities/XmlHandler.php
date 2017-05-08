@@ -133,7 +133,11 @@ class XmlHandler implements XmlHandlerInterface {
         $prescriptionLinesXml = $xmlRequest->addChild('prescription-lines');
         foreach ($medications as $medication) {
             $prescriptionLineXml = $prescriptionLinesXml->addChild('prescription-line');
-            $prescriptionLineXml->addChild('drugId', $medication['vmp']['VIDALID']);
+            if(key_exists('id',$medication)) {
+                $prescriptionLineXml->addChild('drugId',$medication['id']);
+            }else{
+                $prescriptionLineXml->addChild('drugId', $medication['vmp']['VIDALID']);
+            }
             $prescriptionLineXml->addChild('drugType', 'COMMON_NAME_GROUP');
             if(key_exists('dose',$medication)) {
                 $prescriptionLineXml->addChild('dose', $medication['dose']);
@@ -151,6 +155,7 @@ class XmlHandler implements XmlHandlerInterface {
                 $prescriptionLineXml->addChild('frequencyType', $medication['frequencytype']);
             }
         }
+
         return $xmlRequest->asXML();
     }
 }
