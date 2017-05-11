@@ -52,7 +52,7 @@ class VidalService
                 }
                 return $medication;
             } else {
-                return $response->getBody();
+                return $response->getBody()->getContents();
             }
         } catch (\Exception $e) {
             return $e;
@@ -88,7 +88,7 @@ class VidalService
                 }
                 return $medications;
             } else {
-                return $response->getBody();
+                return $response->getBody()->getContents();
             }
         } catch (\Exception $e) {
             return $e;
@@ -123,7 +123,7 @@ class VidalService
                         }
                     }
                 } else {
-                    return $response->getBody();
+                    return $response->getBody()->getContents();
                 }
                 $page++;
             }
@@ -253,9 +253,21 @@ class VidalService
         $formattedAlerts = [];
         foreach ($alerts as $alert) {
             $formattedAlert['alert'] = $alert['VIDAL:TYPE'];
-            $formattedAlert['alertType'] = $alert['VIDAL:ALERTTYPE']['content'];
-            $formattedAlert['alertSeverity'] = $alert['VIDAL:SEVERITY'];
-            $formattedAlert['alertContent'] = $alert['CONTENT']['content'];
+            if(array_key_exists('VIDAL:ALERTTYPE',$alert)){
+                $formattedAlert['alertType'] = $alert['VIDAL:ALERTTYPE']['content'];
+            }else{
+                $formattedAlert['alertType'] =  $alert['VIDAL:TYPE'];
+            }
+            if(array_key_exists('VIDAL:SEVERITY',$alert)){
+                $formattedAlert['alertSeverity'] = $alert['VIDAL:SEVERITY'];
+            }else{
+                $formattedAlert['alertSeverity'] = 'INFO';
+            }
+            if(array_key_exists('CONTENT',$alert)) {
+                $formattedAlert['alertContent'] = $alert['CONTENT']['content'];
+            }else{
+                $formattedAlert['alertContent'] = $alert['TITLE'];
+            }
             $formattedAlert['alertTitle'] = $alert['TITLE'];
             $formattedAlert['alertCategory'] = $alert['VIDAL:CATEGORIES'];
             $formattedAlerts[] = $formattedAlert;
@@ -290,7 +302,7 @@ class VidalService
                 }
                 return $medication;
             } else {
-                return $response->getBody();
+                return $response->getBody()->getContents();
             }
         } catch (\Exception $e) {
             return $e;
@@ -300,7 +312,7 @@ class VidalService
     /**
      * @description :  get vidal medication info by ICD10Code
      * @param : string : id
-     * @return : Medication info array
+     * @return : Pathologies info array
      */
     public function getPathologyByICD10Code($icd10Code = null)
     {
@@ -309,28 +321,61 @@ class VidalService
                 throw new Exception('icd10Code Missing');
             }
             $operation = 'pathologies?';
-            $medication = array();
+            $pathology = array();
             $response = $this->guzzleClient->get($this->baseUrl . $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey . '&filter=CIM10&code=' . $icd10Code);
             if ($response->getStatusCode() == 200) {
-                $medicationResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
-                foreach ($medicationResponseTags as $medicationResponseTag) {
-                    $keys = array_keys($medicationResponseTag['ENTRY']);
+                $pathologyResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
+                foreach ($pathologyResponseTags as $pathologyResponseTag) {
+                    $keys = array_keys($pathologyResponseTag['ENTRY']);
                     foreach ($keys as $key) {
                         if (strpos($key, 'VIDAL') !== false) {
                             $newKey = strtolower(str_replace("VIDAL:", "", $key));
-                            $medication[$newKey] = $medicationResponseTag['ENTRY'][$key];
+                            $pathology[$newKey] = $pathologyResponseTag['ENTRY'][$key];
                         }
                     }
                 }
-                return $medication;
+                return $pathology;
             } else {
-                return $response->getBody();
+                return $response->getBody()->getContents();
             }
         } catch (\Exception $e) {
             return $e;
         }
     }
 
+    /**
+     * @description :  get vidal medication info by name
+     * @param : string : id
+     * @return : Pathologies info array
+     */
+    public function getPathologyByName($name = null)
+    {
+        try {
+            if ($name  == null) {
+                throw new Exception('name is Missing');
+            }
+            $operation = 'pathologies?';
+            $pathology = array();
+            $response = $this->guzzleClient->get($this->baseUrl . $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey . '&q=' . $name);
+            if ($response->getStatusCode() == 200) {
+                $pathologyResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
+                foreach ($pathologyResponseTags as $pathologyResponseTag) {
+                    $keys = array_keys($pathologyResponseTag['ENTRY']);
+                    foreach ($keys as $key) {
+                        if (strpos($key, 'VIDAL') !== false) {
+                            $newKey = strtolower(str_replace("VIDAL:", "", $key));
+                            $pathology[$newKey] = $pathologyResponseTag['ENTRY'][$key];
+                        }
+                    }
+                }
+              return $pathology;
+            } else {
+                return $response->getBody()->getContents();
+            }
+        } catch (\Exception $e) {
+            return $e;
+        }
+    }
     /**
      * @description :  Using allergy class or ingredients code to get vidal allergy
      * @param : string : allergy class
@@ -358,7 +403,7 @@ class VidalService
                 }
                 return $allergy;
             } else {
-                return $response->getBody();
+                return $response->getBody()->getContents();
             }
         } catch (\Exception $e) {
             return $e;
