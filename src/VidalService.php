@@ -42,6 +42,9 @@ class VidalService
             if ($response->getStatusCode() == 200) {
                 $medicationResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
                 foreach ($medicationResponseTags as $medicationResponseTag) {
+                    if(is_array($medicationResponseTag['ENTRY'])){
+                        $medicationResponseTag['ENTRY'] = $medicationResponseTag['ENTRY'][0];
+                    }
                     $keys = array_keys($medicationResponseTag['ENTRY']);
                     foreach ($keys as $key) {
                         if (strpos($key, 'VIDAL') !== false) {
