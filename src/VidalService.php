@@ -140,7 +140,44 @@ class VidalService
         }
 
     }
+    
+    /**
+     * @description :  get vidal units
+     * @return : Units Array
+     */
+    public function getVidalUnits()
+    {
+        try {
+            $page = 1;
+            $operation = 'units?';
+            $units = array();
+            while ($page < 16) {
+                $response = $this->guzzleClient->get($this->baseUrl . $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey . '&start-page=' . $page . '&page-size=25');
+                if ($response->getStatusCode() == 200) {
+                    $unitsResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
+                    foreach ($unitsResponseTags as $unitsResponseTag) {
+                        foreach ($unitsResponseTag['ENTRY'] as $entry) {
+                            $keys = array_keys($entry);
+                            foreach ($keys as $key) {
+                                if (strpos($key, 'VIDAL') !== false) {
+                                    $newKey = strtolower(str_replace("VIDAL:", "", $key));
+                                    $unit[$newKey] = $entry[$key];
+                                }
+                            }
+                            $units[] = $unit;
+                        }
+                    }
+                } else {
+                    return $response->getBody()->getContents();
+                }
+                $page++;
+            }
+            return $units;
+        } catch (\Exception $e) {
+            return $e;
+        }
 
+    }
     /**
      * @description :  get vidal alerts by ingredients names
      * @param : array : patient['date_of_birth'] required ,
@@ -164,7 +201,7 @@ class VidalService
             }
             $operation = 'alerts?';
             $patient['dateOfBirth'] = new \DateTime($patient['date_of_birth']);
-            $patient['dateOfBirth'] = $patient['dateOfBirth']->format('Y-m-dTH:i:s.uZ');
+            $patient['dateOfBirth'] = $patient['dateOfBirth']->format('Y-m-d');
             $allergyClassesIds = [];
             $allergyIngredientsIds = [];
             $pathologiesIds = [];
@@ -228,7 +265,7 @@ class VidalService
             }
             $operation = 'alerts?';
             $patient['dateOfBirth'] = new \DateTime($patient['date_of_birth']);
-            $patient['dateOfBirth'] = $patient['dateOfBirth']->format('Y-m-dTH:i:s.uZ');
+            $patient['dateOfBirth'] = $patient['dateOfBirth']->format('Y-m-d');
             $xmlPrescription = $this->xmlHandler->createPrescriptionXml($patient, $allergyIds, [], $pathologiesIds, $medications,$this->fileName);
             $response = $this->guzzleClient->post(
                 $this->baseUrl . $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey,
