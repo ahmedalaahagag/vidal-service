@@ -11,6 +11,7 @@ class VidalService
     private $guzzleClient;
     private $xmlHandler;
     private $baseUrl = 'http://api-sa.vidal.fr/rest/api/';
+    private $fileName;
 
     public function __construct($appId, $appKey)
     {
@@ -18,6 +19,8 @@ class VidalService
         $this->appKey = $appKey;
         $this->guzzleClient = new GuzzleHttp\Client();
         $this->xmlHandler = new XmlHandler();
+        $this->fileName = time();
+
     }
 
     public function index()
@@ -75,21 +78,22 @@ class VidalService
             }
             $operation = 'pathologies?';
             $medication = array();
-            $medications = array();
             $response = $this->guzzleClient->get($this->baseUrl . $operation . 'q=' . $name . '&app_id=' . $this->appId . '&app_key=' . $this->appKey);
             if ($response->getStatusCode() == 200) {
                 $medicationResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
                 foreach ($medicationResponseTags as $medicationResponseTag) {
+                    if(count(array_keys($medicationResponseTag['ENTRY']))>1){
+                        $medicationResponseTag['ENTRY'] = $medicationResponseTag['ENTRY'][0];
+                    }
                     $keys = array_keys($medicationResponseTag['ENTRY']);
                     foreach ($keys as $key) {
                         if (strpos($key, 'VIDAL') !== false) {
                             $newKey = strtolower(str_replace("VIDAL:", "", $key));
                             $medication[$newKey] = $medicationResponseTag['ENTRY'][$key];
                         }
-                        $medications[] = $medication;
                     }
                 }
-                return $medications;
+                return $medication;
             } else {
                 return $response->getBody()->getContents();
             }
@@ -225,7 +229,7 @@ class VidalService
             $operation = 'alerts?';
             $patient['dateOfBirth'] = new \DateTime($patient['date_of_birth']);
             $patient['dateOfBirth'] = $patient['dateOfBirth']->format('Y-m-dTH:i:s.uZ');
-            $xmlPrescription = $this->xmlHandler->createPrescriptionXml($patient, $allergyIds, [], $pathologiesIds, $medications);
+            $xmlPrescription = $this->xmlHandler->createPrescriptionXml($patient, $allergyIds, [], $pathologiesIds, $medications,$this->fileName);
             $response = $this->guzzleClient->post(
                 $this->baseUrl . $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey,
                 [
@@ -234,7 +238,11 @@ class VidalService
                 ]
             );
             if ($response->getStatusCode() == 200) {
-                return ($this->formatAlertResponse($this->xmlHandler->toArray($response->getBody()->getContents())));
+                $rawResponse = $response->getBody()->getContents();
+                $formatedResponse  = $this->formatAlertResponse($this->xmlHandler->toArray($rawResponse));
+                $alertsFile = '/public/storage/exports/alerts/response'.$this->fileName.'.txt';
+                file_put_contents(base_path().$alertsFile,$rawResponse);
+                return $formatedResponse;
             } else {
                 throw new \Exception('Unknown Error Occurred');
             }
@@ -267,9 +275,9 @@ class VidalService
                 $formattedAlert['alertSeverity'] = 'INFO';
             }
             if(array_key_exists('CONTENT',$alert)) {
-                $formattedAlert['alertContent'] = $alert['CONTENT']['content'];
+                $formattedAlert['alertContent'] = strip_tags($alert['CONTENT']['content']);
             }else{
-                $formattedAlert['alertContent'] = $alert['TITLE'];
+                $formattedAlert['alertContent'] = strip_tags($alert['TITLE']);
             }
             $formattedAlert['alertTitle'] = $alert['TITLE'];
             $formattedAlert['alertCategory'] = $alert['VIDAL:CATEGORIES'];
