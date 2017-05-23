@@ -90,7 +90,7 @@ class XmlHandler implements XmlHandlerInterface {
 		return $xml_array;
 	}
 
-	function createPrescriptionXml($patient = [],$allergyClassesIds = [],$allergyIngredientsIds = [], $pathologiesIds = [],$medications = []){
+	function createPrescriptionXml($patient = [],$allergyClassesIds = [],$allergyIngredientsIds = [], $pathologiesIds = [],$medications = [],$logFile = null){
         $xmlRequest = new \SimpleXMLElement('<prescription></prescription>');
         $patientXml = $xmlRequest->addChild('patient');
         $patientXml->addChild('dateOfBirth', $patient['dateOfBirth']);
@@ -155,8 +155,11 @@ class XmlHandler implements XmlHandlerInterface {
                 $prescriptionLineXml->addChild('frequencyType', $medication['frequencytype']);
             }
         }
-
-        return $xmlRequest->asXML();
+            if($logFile!=null){
+                $alertsFile = '/public/storage/exports/alerts/request'.$logFile.'.txt';
+                file_put_contents(base_path().$alertsFile,$xmlRequest->asXML());
+            }
+         return $xmlRequest->asXML();
     }
 }
 
