@@ -112,19 +112,19 @@ class XmlHandler implements XmlHandlerInterface {
         if(key_exists('hepaticInsufficiency',$patient)) {
             $patientXml->addChild('hepaticInsufficiency', key_exists('hepaticInsufficiency', $patient) && $patient['hepaticInsufficiency'] == nullOrEmptyString() ? 'NONE' : $patient['hepaticInsufficiency']);
         }
-        $allergiesXml = $xmlRequest->addChild('allergies');
+        $allergiesXml = $patientXml->addChild('allergies');
         if($allergyClassesIds != null && !empty($allergyClassesIds)){
             foreach ($allergyClassesIds as $allergyClassesId) {
                 $allergiesXml->addChild('allergy', 'vidal://allergy/'.$allergyClassesId);
             }
         }
-        $moleculesXml = $xmlRequest->addChild('molecules');
+        $moleculesXml = $patientXml->addChild('molecules');
         if($allergyIngredientsIds!=null && !empty($allergyIngredientsIds)){
             foreach ($allergyIngredientsIds as $allergyIngredientsId) {
                 $moleculesXml->addChild('molecule', 'vidal://molecule/'.$allergyIngredientsId);
             }
         }
-        $pathologiesXml = $xmlRequest->addChild('pathologies');
+        $pathologiesXml = $patientXml->addChild('pathologies');
         if($pathologiesIds!=null && !empty($pathologiesIds)) {
             foreach ($pathologiesIds as $pathologiesId) {
                 $pathologiesXml->addChild('pathology', 'vidal://cim10/' . $pathologiesId);
