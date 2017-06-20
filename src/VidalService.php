@@ -64,7 +64,43 @@ class VidalService
             return $e;
         }
     }
-
+    /**
+     * @description :  Using vidal id to get medication units
+     * @param string $vidalMedicationId vidal medication id
+     * @return : Units array
+     */
+    public function getMedicationUnits($vidalMedicationId = null)
+    {
+        try {
+            if ($vidalMedicationId == null) {
+                throw new Exception('ID Missing');
+            }
+            $operation = 'vmp/';
+            $units = array();
+            $response = $this->guzzleClient->get($this->baseUrl . $operation . $vidalMedicationId .'/units?app_id=' . $this->appId . '&app_key=' . $this->appKey);
+            if ($response->getStatusCode() == 200) {
+                $unitsResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
+                foreach ($unitsResponseTags as $unitsResponseTag) {
+                    $unit = array();
+                    foreach ($unitsResponseTag['ENTRY'] as $entry) {
+                        $keys = array_keys($entry);
+                        foreach ($keys as $key) {
+                            if (strpos($key, 'VIDAL') !== false) {
+                                $newKey = strtolower(str_replace("VIDAL:", "", $key));
+                                $unit[$newKey] = $entry[$key];
+                            }
+                        }
+                        $units[] = $unit;
+                    }
+                }
+                return $units;
+            } else {
+                return $response->getBody()->getContents();
+            }
+        } catch (\Exception $e) {
+            return $e;
+        }
+    }
     /**
      * @description :  Using name to get vidal medication ID
      * @param string name
