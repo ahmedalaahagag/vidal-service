@@ -82,7 +82,13 @@ class VidalService
                 $unitsResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
                 foreach ($unitsResponseTags as $unitsResponseTag) {
                     $unit = array();
-                    foreach ($unitsResponseTag['ENTRY'] as $entry) {
+                    $entries = array();
+                    if(isset($unitsResponseTag['ENTRY'][1])){
+                        $entries = $unitsResponseTag['ENTRY'];
+                    }else{
+                        $entries[] = $unitsResponseTag['ENTRY'];
+                    }
+                    foreach ($entries as $entry) {
                         $keys = array_keys($entry);
                         foreach ($keys as $key) {
                             if (strpos($key, 'VIDAL') !== false) {
