@@ -13,5 +13,5 @@ https://packagist.org/packages/hagag/vidal-service
 
 # composer install 
 <p>"require": { 
-  "hagag/vidal-service": "2.*"
+  "hagag/vidal-service": "*"
 }</p>
