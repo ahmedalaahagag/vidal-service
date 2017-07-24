@@ -15,3 +15,4 @@ https://packagist.org/packages/hagag/vidal-service
 <p>"require": { 
   "hagag/vidal-service": "*"
 }</p>
+CLI : composer require hagag/vidal-service
