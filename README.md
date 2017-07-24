@@ -8,8 +8,9 @@ Alerts for confilecting medications
 Allergies Database
 Used as package within a framework.
 <br\>
-# packagist : https://packagist.org/packages/hagag/vidal-service
-<br\>
+# packagist 
+https://packagist.org/packages/hagag/vidal-service
+
 # composer install :
 "require": {
   "hagag/vidal-service": "2.*"
