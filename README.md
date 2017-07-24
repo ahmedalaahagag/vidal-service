@@ -11,7 +11,7 @@ Used as package within a framework.
 # packagist 
 https://packagist.org/packages/hagag/vidal-service
 
-# composer install :
-"require": {
-  "hagag/vidal-service": "2.*"
+# composer install 
+"require": { <br\>
+  "hagag/vidal-service": "2.*"<br\>
 }
