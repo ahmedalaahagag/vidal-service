@@ -1,25 +1,27 @@
 <?php
 namespace Hagag\VidalService;
 
-use GuzzleHttp;
 use \Hagag\VidalService\Utilities\XmlHandler as XmlHandler;
+use \Hagag\VidalService\Utilities\HttpHandler;
 
 class VidalService
 {
     private $appId;
     private $appKey;
-    private $guzzleClient;
     private $xmlHandler;
     private $baseUrl = 'http://api-sa.vidal.fr/rest/api/';
     private $fileName;
+
+    public $httpHandler;
 
     public function __construct($appId, $appKey)
     {
         $this->appId = $appId;
         $this->appKey = $appKey;
-        $this->guzzleClient = new GuzzleHttp\Client();
         $this->xmlHandler = new XmlHandler();
         $this->fileName = time();
+
+        $this->httpHandler = new HttpHandler($this->baseUrl);
 
     }
 
@@ -41,9 +43,9 @@ class VidalService
             }
             $operation = 'search?';
             $medication = array();
-            $response = $this->guzzleClient->get($this->baseUrl . $operation . 'code=' . $greenRainCode . '&app_id=' . $this->appId . '&app_key=' . $this->appKey);
-            if ($response->getStatusCode() == 200) {
-                $medicationResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
+            $response = $this->httpHandler->get($operation . 'code=' . $greenRainCode . '&app_id=' . $this->appId . '&app_key=' . $this->appKey);
+            if ($response) {
+                $medicationResponseTags = $this->xmlHandler->toArray($response);
                 foreach ($medicationResponseTags as $medicationResponseTag) {
                     if(count(array_keys($medicationResponseTag['ENTRY']))==2){
                         $medicationResponseTag['ENTRY'] = $medicationResponseTag['ENTRY'][0];
@@ -58,10 +60,12 @@ class VidalService
                 }
                 return $medication;
             } else {
-                return $response->getBody()->getContents();
+                return [];
             }
         } catch (\Exception $e) {
-            return $e;
+            throw $e;
+            
+            
         }
     }
     /**
@@ -77,9 +81,9 @@ class VidalService
             }
             $operation = 'vmp/';
             $units = array();
-            $response = $this->guzzleClient->get($this->baseUrl . $operation . $vidalMedicationId .'/units?app_id=' . $this->appId . '&app_key=' . $this->appKey);
-            if ($response->getStatusCode() == 200) {
-                $unitsResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
+            $response = $this->httpHandler->get($operation . $vidalMedicationId .'/units?app_id=' . $this->appId . '&app_key=' . $this->appKey);
+            if ($response) {
+                $unitsResponseTags = $this->xmlHandler->toArray($response);
                 foreach ($unitsResponseTags as $unitsResponseTag) {
                     $unit = array();
                     $entries = array();
@@ -101,10 +105,10 @@ class VidalService
                 }
                 return $units;
             } else {
-                return $response->getBody()->getContents();
+                return '';
             }
         } catch (\Exception $e) {
-            return $e;
+            throw $e;
         }
     }
     /**
@@ -120,9 +124,9 @@ class VidalService
             }
             $operation = 'pathologies?';
             $medication = array();
-            $response = $this->guzzleClient->get($this->baseUrl . $operation . 'q=' . $name . '&app_id=' . $this->appId . '&app_key=' . $this->appKey);
-            if ($response->getStatusCode() == 200) {
-                $medicationResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
+            $response = $this->httpHandler->get($operation . 'q=' . $name . '&app_id=' . $this->appId . '&app_key=' . $this->appKey);
+            if ($response) {
+                $medicationResponseTags = $this->xmlHandler->toArray($response);
                 foreach ($medicationResponseTags as $medicationResponseTag) {
                     if(count(array_keys($medicationResponseTag['ENTRY']))>1){
                         $medicationResponseTag['ENTRY'] = $medicationResponseTag['ENTRY'][0];
@@ -137,10 +141,10 @@ class VidalService
                 }
                 return $medication;
             } else {
-                return $response->getBody()->getContents();
+                return '';
             }
         } catch (\Exception $e) {
-            return $e;
+            throw $e;
         }
     }
 
@@ -156,9 +160,9 @@ class VidalService
             $allergies = array();
             while ($page < 34) {
                 $allergy = array();
-                $response = $this->guzzleClient->get($this->baseUrl . $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey . '&start-page=' . $page . '&page-size=25');
-                if ($response->getStatusCode() == 200) {
-                    $allergiesResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
+                $response = $this->httpHandler->get($operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey . '&start-page=' . $page . '&page-size=25');
+                if ($response) {
+                    $allergiesResponseTags = $this->xmlHandler->toArray($response);
                     foreach ($allergiesResponseTags as $allergiesResponseTag) {
                         foreach ($allergiesResponseTag['ENTRY'] as $entry) {
                             $keys = array_keys($entry);
@@ -172,13 +176,13 @@ class VidalService
                         }
                     }
                 } else {
-                    return $response->getBody()->getContents();
+                    return '';
                 }
                 $page++;
             }
             return $allergies;
         } catch (\Exception $e) {
-            return $e;
+            throw $e;
         }
 
     }
@@ -194,9 +198,9 @@ class VidalService
             $operation = 'units?';
             $units = array();
             while ($page < 16) {
-                $response = $this->guzzleClient->get($this->baseUrl . $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey . '&start-page=' . $page . '&page-size=25');
-                if ($response->getStatusCode() == 200) {
-                    $unitsResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
+                $response = $this->httpHandler->get($operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey . '&start-page=' . $page . '&page-size=25');
+                if ($response) {
+                    $unitsResponseTags = $this->xmlHandler->toArray($response);
                     foreach ($unitsResponseTags as $unitsResponseTag) {
                         foreach ($unitsResponseTag['ENTRY'] as $entry) {
                             $keys = array_keys($entry);
@@ -210,13 +214,13 @@ class VidalService
                         }
                     }
                 } else {
-                    return $response->getBody()->getContents();
+                    return '';
                 }
                 $page++;
             }
             return $units;
         } catch (\Exception $e) {
-            return $e;
+            throw $e;
         }
 
     }
@@ -265,20 +269,20 @@ class VidalService
                 $prescriptionMedication[] = $medicationInfo;
             }
             $xmlPrescription = $this->xmlHandler->createPrescriptionXml($patient, $allergyClassesIds, $allergyIngredientsIds, $pathologiesIds, $prescriptionMedication);
-            $response = $this->guzzleClient->post(
-                $this->baseUrl . $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey,
+            $response = $this->httpHandler->post(
+                $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey,
                 [
                     'headers' => ['Content-Type' => 'text/xml'],
                     'body' => $xmlPrescription
                 ]
             );
-            if ($response->getStatusCode() == 200) {
-                return ($this->formatAlertResponse($this->xmlHandler->toArray($response->getBody()->getContents())));
+            if ($response) {
+                return ($this->formatAlertResponse($this->xmlHandler->toArray($response)));
             } else {
-                throw new \Exception('Unknown Error Occurred');
+                return '';
             }
         } catch (\Exception $e) {
-            return $e;
+            throw $e;
         }
     }
 
@@ -309,24 +313,23 @@ class VidalService
             $patient['dateOfBirth'] = new \DateTime($patient['date_of_birth']);
             $patient['dateOfBirth'] = $patient['dateOfBirth']->format('Y-m-d');
             $xmlPrescription = $this->xmlHandler->createPrescriptionXml($patient, $allergyIds, [], $pathologiesIds, $medications,$this->fileName);
-            $response = $this->guzzleClient->post(
-                $this->baseUrl . $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey,
+            $response = $this->httpHandler->post(
+                $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey,
                 [
                     'headers' => ['Content-Type' => 'text/xml'],
                     'body' => $xmlPrescription
                 ]
             );
-            if ($response->getStatusCode() == 200) {
-                $rawResponse = $response->getBody()->getContents();
-                $formatedResponse  = $this->formatAlertResponse($this->xmlHandler->toArray($rawResponse));
+            if ($response) {
+                $formatedResponse  = $this->formatAlertResponse($this->xmlHandler->toArray($response));
                 $alertsFile = '/public/storage/exports/alerts/response'.$this->fileName.'.txt';
-                file_put_contents(base_path().$alertsFile,$rawResponse);
+                file_put_contents(base_path().$alertsFile,$response);
                 return $formatedResponse;
             } else {
-                throw new \Exception('Unknown Error Occurred');
+                return [];
             }
         } catch (\Exception $e) {
-            return $e;
+            throw $e;
         }
     }
 
@@ -378,9 +381,9 @@ class VidalService
             }
             $operation = 'package/';
             $medication = array();
-            $response = $this->guzzleClient->get($this->baseUrl . $operation . $id . '?app_id=' . $this->appId . '&app_key=' . $this->appKey);
-            if ($response->getStatusCode() == 200) {
-                $medicationResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
+            $response = $this->httpHandler->get($operation . $id . '?app_id=' . $this->appId . '&app_key=' . $this->appKey);
+            if ($response) {
+                $medicationResponseTags = $this->xmlHandler->toArray($response);
                 foreach ($medicationResponseTags as $medicationResponseTag) {
                     $keys = array_keys($medicationResponseTag['ENTRY']);
                     foreach ($keys as $key) {
@@ -392,10 +395,10 @@ class VidalService
                 }
                 return $medication;
             } else {
-                return $response->getBody()->getContents();
+                return '';
             }
         } catch (\Exception $e) {
-            return $e;
+            throw $e;
         }
     }
 
@@ -412,9 +415,9 @@ class VidalService
             }
             $operation = 'pathologies?';
             $pathology = array();
-            $response = $this->guzzleClient->get($this->baseUrl . $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey . '&filter=CIM10&code=' . $icd10Code);
-            if ($response->getStatusCode() == 200) {
-                $pathologyResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
+            $response = $this->httpHandler->get($operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey . '&filter=CIM10&code=' . $icd10Code);
+            if ($response) {
+                $pathologyResponseTags = $this->xmlHandler->toArray($response);
                 foreach ($pathologyResponseTags as $pathologyResponseTag) {
                     $keys = array_keys($pathologyResponseTag['ENTRY']);
                     foreach ($keys as $key) {
@@ -426,10 +429,10 @@ class VidalService
                 }
                 return $pathology;
             } else {
-                return $response->getBody()->getContents();
+                return '';
             }
         } catch (\Exception $e) {
-            return $e;
+            throw $e;
         }
     }
 
@@ -446,9 +449,9 @@ class VidalService
             }
             $operation = 'pathologies?';
             $pathology = array();
-            $response = $this->guzzleClient->get($this->baseUrl . $operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey . '&q=' . $name);
-            if ($response->getStatusCode() == 200) {
-                $pathologyResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
+            $response = $this->httpHandler->get($operation . 'app_id=' . $this->appId . '&app_key=' . $this->appKey . '&q=' . $name);
+            if ($response) {
+                $pathologyResponseTags = $this->xmlHandler->toArray($response);
                 foreach ($pathologyResponseTags as $pathologyResponseTag) {
                     $keys = array_keys($pathologyResponseTag['ENTRY']);
                     foreach ($keys as $key) {
@@ -460,10 +463,10 @@ class VidalService
                 }
               return $pathology;
             } else {
-                return $response->getBody()->getContents();
+                return '';
             }
         } catch (\Exception $e) {
-            return $e;
+            throw $e;
         }
     }
     /**
@@ -479,9 +482,9 @@ class VidalService
             }
             $operation = 'allergies?';
             $allergy = array();
-            $response = $this->guzzleClient->get($this->baseUrl . $operation . 'q=' . $allergyClassIngredients . '&app_id=' . $this->appId . '&app_key=' . $this->appKey);
-            if ($response->getStatusCode() == 200) {
-                $allergyResponseTags = $this->xmlHandler->toArray($response->getBody()->getContents());
+            $response = $this->httpHandler->get($operation . 'q=' . $allergyClassIngredients . '&app_id=' . $this->appId . '&app_key=' . $this->appKey);
+            if ($response) {
+                $allergyResponseTags = $this->xmlHandler->toArray($response);
                 foreach ($allergyResponseTags as $allergyResponseTag) {
                     $keys = array_keys($allergyResponseTag['ENTRY']);
                     foreach ($keys as $key) {
@@ -493,10 +496,10 @@ class VidalService
                 }
                 return $allergy;
             } else {
-                return $response->getBody()->getContents();
+                return '';
             }
         } catch (\Exception $e) {
-            return $e;
+            throw $e;
         }
     }
 }
