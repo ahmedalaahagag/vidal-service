@@ -54,7 +54,6 @@ class HttpHandler  {
 
 
 	function _handleError($response){
-		call_user_func_array([$this, 'closure'], [$response]);
 		return false;
 	}
 
