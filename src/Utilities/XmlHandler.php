@@ -95,22 +95,22 @@ class XmlHandler implements XmlHandlerInterface {
         $patientXml = $xmlRequest->addChild('patient');
         $patientXml->addChild('dateOfBirth', $patient['dateOfBirth']);
         if(key_exists('gender',$patient)){
-            $patientXml->addChild('gender', $patient['gender']==nullOrEmptyString()? null: strtoupper($patient['gender']));
+            $patientXml->addChild('gender', $patient['gender']==null || $patient['gender']=="" ? null: strtoupper($patient['gender']));
         }
         if(key_exists('weight',$patient)) {
-            $patientXml->addChild('weight', key_exists('weight', $patient) && $patient['weight'] == nullOrEmptyString() ? 0 : $patient['weight']);
+            $patientXml->addChild('weight', key_exists('weight', $patient) && ($patient['weight']==null || $patient['weight']=="") ? 0 : $patient['weight']);
         }
         if(key_exists('height',$patient)) {
-            $patientXml->addChild('height', key_exists('height', $patient) && $patient['height'] == nullOrEmptyString() ? 0 : $patient['height']);
+            $patientXml->addChild('height', key_exists('height', $patient) && ($patient['height']==null || $patient['height']=="") ? 0 : $patient['height']);
         }
         if(key_exists('breastFeeding',$patient)) {
-            $patientXml->addChild('breastFeeding', key_exists('breastFeeding', $patient) && $patient['breastFeeding'] == nullOrEmptyString() ? 'NONE' : $patient['breastFeeding']);
+            $patientXml->addChild('breastFeeding', key_exists('breastFeeding', $patient) && ($patient['breastFeeding']==null || $patient['breastFeeding']=="")  ? 'NONE' : $patient['breastFeeding']);
         }
         if(key_exists('breastFeeding',$patient)) {
-            $patientXml->addChild('breastFeeding', key_exists('creatin', $patient) && $patient['creatin'] == nullOrEmptyString() ? '120' : $patient['creatin']);
+            $patientXml->addChild('breastFeeding', key_exists('creatin', $patient) && ($patient['creatin']==null || $patient['creatin']=="") ? '120' : $patient['creatin']);
         }
         if(key_exists('hepaticInsufficiency',$patient)) {
-            $patientXml->addChild('hepaticInsufficiency', key_exists('hepaticInsufficiency', $patient) && $patient['hepaticInsufficiency'] == nullOrEmptyString() ? 'NONE' : $patient['hepaticInsufficiency']);
+            $patientXml->addChild('hepaticInsufficiency', key_exists('hepaticInsufficiency', $patient) && ($patient['hepaticInsufficiency']==null || $patient['hepaticInsufficiency']=="") ? 'NONE' : $patient['hepaticInsufficiency']);
         }
         $allergiesXml = $patientXml->addChild('allergies');
         if($allergyClassesIds != null && !empty($allergyClassesIds)){
