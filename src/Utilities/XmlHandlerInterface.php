@@ -6,5 +6,3 @@ interface XmlHandlerInterface {
 
 	function toArray($xml);
 }
-
-?>
