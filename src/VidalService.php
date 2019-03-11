@@ -37,7 +37,7 @@ class VidalService
     {
         try {
             if ($greenRainCode == null) {
-                throw new Exception('Greencode Missing');
+                throw new \Exception('Greencode Missing');
             }
             $operation = 'search?';
             $medication = array();
@@ -73,7 +73,7 @@ class VidalService
     {
         try {
             if ($vidalMedicationId == null) {
-                throw new Exception('ID Missing');
+                throw new \Exception('ID Missing');
             }
             $operation = 'vmp/';
             $units = array();
@@ -85,7 +85,7 @@ class VidalService
                     $entries = array();
                     if(isset($unitsResponseTag['ENTRY'][1])){
                         $entries = $unitsResponseTag['ENTRY'];
-                    }else{
+                    } else {
                         $entries[] = $unitsResponseTag['ENTRY'];
                     }
                     foreach ($entries as $entry) {
@@ -115,8 +115,8 @@ class VidalService
     public function getMedicationByName($name = null)
     {
         try {
-            if ($name == null) {
-                throw new Exception('Name Missing');
+            if ($name === null) {
+                throw new \Exception('Name Missing');
             }
             $operation = 'pathologies?';
             $medication = array();
@@ -346,17 +346,17 @@ class VidalService
                 $formattedAlert['alert'] = $alert['VIDAL:TYPE'];
                 if(array_key_exists('VIDAL:ALERTTYPE',$alert)){
                     $formattedAlert['alertType'] = $alert['VIDAL:ALERTTYPE']['content'];
-                }else{
+                } else {
                     $formattedAlert['alertType'] =  $alert['VIDAL:TYPE'];
                 }
                 if(array_key_exists('VIDAL:SEVERITY',$alert)){
                     $formattedAlert['alertSeverity'] = $alert['VIDAL:SEVERITY'];
-                }else{
+                } else {
                     $formattedAlert['alertSeverity'] = 'INFO';
                 }
                 if(array_key_exists('CONTENT',$alert)) {
                     $formattedAlert['alertContent'] = strip_tags($alert['CONTENT']['content']);
-                }else{
+                } else {
                     $formattedAlert['alertContent'] = strip_tags($alert['TITLE']);
                 }
                 $formattedAlert['alertTitle'] = $alert['TITLE'];
@@ -375,8 +375,8 @@ class VidalService
     public function getMedicationById($id = null)
     {
         try {
-            if ($id == null) {
-                throw new Exception('id Missing');
+            if ($id === null) {
+                throw new \Exception('id Missing');
             }
             $operation = 'package/';
             $medication = array();
@@ -409,7 +409,7 @@ class VidalService
     public function getPathologyByICD10Code($icd10Code = null)
     {
         try {
-            if ($icd10Code == null) {
+            if ($icd10Code === null) {
                 throw new Exception('icd10Code Missing');
             }
             $operation = 'pathologies?';
@@ -443,8 +443,8 @@ class VidalService
     public function getPathologyByName($name = null)
     {
         try {
-            if ($name  == null) {
-                throw new Exception('name is Missing');
+            if ($name === null) {
+                throw new \Exception('name is Missing');
             }
             $operation = 'pathologies?';
             $pathology = array();
@@ -476,8 +476,8 @@ class VidalService
     public function getAllergyByClassOrIngredients($allergyClassIngredients = null)
     {
         try {
-            if ($allergyClassIngredients == null) {
-                throw new Exception('Allergy Class Missing');
+            if ($allergyClassIngredients === null) {
+                throw new \Exception('Allergy Class Missing');
             }
             $operation = 'allergies?';
             $allergy = array();
